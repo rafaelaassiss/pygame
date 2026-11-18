@@ -1,95 +1,45 @@
+import io
+import random  # Permite sortear uma frase da lista com random.choice().
+import math
+import struct
+import wave
 import pygame
+import csv
+from pathlib import Path
 
-# --------------------------------------------------
-# CONFIGURAÇÕES INICIAIS
-# --------------------------------------------------
-
-# Resolução lógica do jogo.
-# O Pygame vai ampliar essa resolução para ocupar a tela inteira.
+# ---------------- ETAPA 2: DADOS GERAIS DO JOGO ----------------
 LARGURA = 1000
 ALTURA = 700
+NOMES_FASE1 = ["Insper 1", "Insper 2", "Insper 3", "FGV 1", "FGV 2", "FGV 3"]
+NOMES_FASE2 = ["Insper 1", "Insper 2", "Insper 3", "Insper 4",
+               "FGV 1", "FGV 2", "FGV 3", "FGV 4"]
 
+def nome_personagem(numero, fase):
+    if fase == 1:
+        return NOMES_FASE1[numero - 1]
+    return NOMES_FASE2[numero - 1]
 
-# --------------------------------------------------
-# CORES
-# --------------------------------------------------
+# Cada texto entre aspas é um elemento da lista de falas.
+# O sorteio acontece ao embarcar, e não a cada quadro da tela.
+FALAS = [
+    "Isso conta como atividade complementar?",
+    "Meu terno não pode molhar!",
+    "Essa viagem tem certificado?",
+    "O remo entra como experiência profissional?",
+    "Já coloquei capitão no currículo.",
+    "Tem café nessa reunião flutuante?",
+    "Podemos chamar isso de intercâmbio?",
+    "Vou abrir uma startup de barcos.",
+    "Isso aumenta meu networking, né?"
+]
 
 FUNDO = (245, 243, 235)
 TEXTO = (37, 48, 58)
-
 AZUL = (48, 115, 150)
 AZUL_CLARO = (203, 227, 234)
-
 VERDE = (32, 119, 99)
 LARANJA = (213, 133, 59)
-
 BRANCO = (255, 255, 255)
 CINZA = (220, 220, 214)
-PRETO = (0, 0, 0)
-
 VERMELHO = (173, 71, 67)
 
-
-# --------------------------------------------------
-# INICIALIZAÇÃO DO PYGAME
-# --------------------------------------------------
-
-pygame.init()
-
-
-# Cria a tela cheia.
-# 1000 x 700 continua sendo a resolução usada pelo código
-# para posicionar os elementos.
-tela = pygame.display.set_mode(
-    (LARGURA, ALTURA),
-    pygame.FULLSCREEN | pygame.SCALED
-)
-
-pygame.display.set_caption("Travessia Insper x FGV")
-
-
-# Controla a quantidade de quadros por segundo.
-relogio = pygame.time.Clock()
-
-
-# --------------------------------------------------
-# LOOP PRINCIPAL
-# --------------------------------------------------
-
-executando = True
-
-while executando:
-
-    # Percorre todos os eventos que aconteceram.
-    for evento in pygame.event.get():
-
-        # Fecha o jogo pelo botão de fechar.
-        if evento.type == pygame.QUIT:
-            executando = False
-
-        # Verifica teclas pressionadas.
-        if evento.type == pygame.KEYDOWN:
-
-            # ESC fecha o jogo.
-            if evento.key == pygame.K_ESCAPE:
-                executando = False
-
-
-    # Preenche a tela com uma cor enquanto
-    # ainda não construímos o cenário.
-    tela.fill(FUNDO)
-
-
-    # Atualiza o que aparece na tela.
-    pygame.display.flip()
-
-
-    # Limita o jogo a 60 FPS.
-    relogio.tick(60)
-
-
-# --------------------------------------------------
-# ENCERRAMENTO
-# --------------------------------------------------
-
-pygame.quit()
