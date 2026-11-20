@@ -7,7 +7,6 @@ import pygame
 import csv
 from pathlib import Path
 
-# ---------------- ETAPA 2: DADOS GERAIS DO JOGO ----------------
 LARGURA = 1000
 ALTURA = 700
 NOMES_FASE1 = ["Insper 1", "Insper 2", "Insper 3", "FGV 1", "FGV 2", "FGV 3"]
