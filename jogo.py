@@ -1,5 +1,5 @@
 import io
-import random  # Permite sortear uma frase da lista com random.choice().
+import random
 import math
 import struct
 import wave
@@ -18,8 +18,6 @@ def nome_personagem(numero, fase):
         return NOMES_FASE1[numero - 1]
     return NOMES_FASE2[numero - 1]
 
-# Cada texto entre aspas é um elemento da lista de falas.
-# O sorteio acontece ao embarcar, e não a cada quadro da tela.
 FALAS = [
     "Isso conta como atividade complementar?",
     "Meu terno não pode molhar!",
