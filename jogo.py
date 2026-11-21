@@ -341,3 +341,71 @@ def desenhar_jogo(tela, fonte_titulo, fonte, esquerda, direita, barco,
         desenhar_botao(tela, "Menu", (565, 620, 145, 52), fonte, mouse)
 
     return areas_esquerda, areas_direita
+# ---------------- ETAPA 6: ESTADO DA PARTIDA ----------------
+def nova_partida(fase):
+    """Reinicia a fase atual."""
+    if fase == 1:
+        esquerda = [1, 2, 3, 4, 5, 6]
+    else:
+        esquerda = [1, 2, 3, 4, 5, 6, 7, 8]
+    direita = []
+    barco = 0
+    jogadas = 0
+    selecionados = []
+    estado = "jogando"
+    mensagem = ""
+    return esquerda, direita, barco, jogadas, selecionados, estado, mensagem
+
+# ---------------- ETAPAS 6, 7 e 8: LOOP PRINCIPAL, MENU, REGRAS E FASES ----------------
+def main():
+    """Abre a janela e coordena as três telas e os cliques do jogador."""
+    pygame.mixer.pre_init(22050, -16, 1, 512)
+    pygame.init()
+
+    tela = pygame.display.set_mode((LARGURA, ALTURA), pygame.FULLSCREEN | pygame.SCALED)
+    pygame.display.set_caption("Travessia: Insper x FGV")
+    relogio = pygame.time.Clock()
+
+    fonte_titulo = pygame.font.Font(None, 54)
+    fonte = pygame.font.Font(None, 30)
+    fonte_grande = pygame.font.Font(None, 42)
+
+    # Imagem de fundo da tela inicial. O arquivo deve ficar na mesma pasta do jogo.
+    caminho_fundo_menu = Path(__file__).with_name("fundo_menu.jpg")
+    fundo_menu = pygame.image.load(str(caminho_fundo_menu)).convert()
+    fundo_menu = pygame.transform.smoothscale(fundo_menu, (LARGURA, ALTURA))
+
+    # Músicas e efeitos são gerados pelo próprio Python.
+    trilha = None
+    trilha_menu = None
+    trilha_fase1 = None
+    trilha_fase2 = None
+    som_vitoria = None
+    som_derrota = None
+    musica_atual = ""
+    if pygame.mixer.get_init():
+        trilha_menu = pygame.mixer.Sound(file=io.BytesIO(criar_trilha_menu()))
+        trilha_fase1 = pygame.mixer.Sound(file=io.BytesIO(criar_trilha_fase1()))
+        trilha_fase2 = pygame.mixer.Sound(file=io.BytesIO(criar_trilha_fase2()))
+        som_vitoria = pygame.mixer.Sound(file=io.BytesIO(criar_som_vitoria()))
+        som_derrota = pygame.mixer.Sound(file=io.BytesIO(criar_som_derrota()))
+        trilha = trilha_menu
+        trilha.set_volume(0.24)
+        trilha.play(loops=-1)
+        musica_atual = "menu"
+
+    tela_atual = "menu"
+    fase = 1
+    nome_jogador = ""
+    aviso_nome = ""
+    ranking = []
+    inicio_animacao = 0
+    resultado_pendente = ""
+    areas_esquerda = []
+    areas_direita = []
+
+    esquerda, direita, barco, jogadas, selecionados, estado, mensagem = (
+        nova_partida(fase)
+    )
+
+    executando = True
