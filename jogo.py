@@ -409,3 +409,149 @@ def main():
     )
 
     executando = True
+    
+    # O laço repete o desenho e a leitura dos eventos até fechar o jogo.
+    while executando:
+        mouse = pygame.mouse.get_pos()
+
+        # Troca a música conforme a tela/fase, sem reiniciar a mesma faixa a cada quadro.
+        musica_desejada = "menu" if tela_atual != "jogo" else ("fase1" if fase == 1 else "fase2")
+        if pygame.mixer.get_init() and musica_desejada != musica_atual:
+            if trilha is not None:
+                trilha.stop()
+            if musica_desejada == "menu":
+                trilha = trilha_menu
+            elif musica_desejada == "fase1":
+                trilha = trilha_fase1
+            else:
+                trilha = trilha_fase2
+            trilha.set_volume(0.24)
+            trilha.play(loops=-1)
+            musica_atual = musica_desejada
+
+        # Finaliza o movimento antes de aplicar as regras da travessia.
+        if tela_atual == "jogo" and estado == "animando":
+            progresso = min(1, (pygame.time.get_ticks() - inicio_animacao) / 1100)
+            if progresso >= 1:
+                origem = esquerda if barco == 1 else direita
+                destino = direita if barco == 1 else esquerda
+                for numero in selecionados:
+                    origem.remove(numero)
+                    destino.append(numero)
+                insper_a, fgv_a = contar_grupos(esquerda, fase)
+                insper_b, fgv_b = contar_grupos(direita, fase)
+                if (insper_a > 0 and fgv_a > insper_a) or (insper_b > 0 and fgv_b > insper_b):
+                    estado = "virando"
+                    inicio_animacao = pygame.time.get_ticks()
+                    if som_derrota is not None:
+                        som_derrota.play()
+                elif len(direita) == (6 if fase == 1 else 8):
+                    if fase == 1:
+                        fase = 2
+                        esquerda, direita, barco, jogadas, selecionados, estado, mensagem = nova_partida(fase)
+                        mensagem = "FASE 2! Agora são 4 raposas e 4 jacarés. O barco leva até 3!"
+                    else:
+                        estado = "vitoria"
+                        selecionados = []
+                        mensagem = "Você venceu as duas fases, " + nome_jogador + "!"
+                        if som_vitoria is not None:
+                            som_vitoria.play()
+                    # Registra no ranking apenas a vitória final da fase 2.
+                    if fase == 2 and estado == "vitoria":
+                        arquivo = Path(__file__).with_name("vitorias_travessia.csv")
+                        try:
+                            novo = not arquivo.exists() or arquivo.stat().st_size == 0
+                            with arquivo.open("a", newline="", encoding="utf-8-sig") as dados:
+                                escritor = csv.writer(dados)
+                                if novo:
+                                    escritor.writerow(["nome", "travessias"])
+                                escritor.writerow([nome_jogador, jogadas])
+                        except OSError:
+                            mensagem = "Vitória! Não foi possível salvar o resultado."
+                else:
+                    estado = "jogando"
+                    selecionados = []
+                    mensagem = ""
+
+        if tela_atual == "jogo" and estado == "virando":
+            progresso_virada = min(1, (pygame.time.get_ticks() - inicio_animacao) / 1100)
+            if progresso_virada >= 1:
+                # Exibe a mensagem de derrota em uma tela separada.
+                tela_atual = "tela_derrota"
+                inicio_animacao = pygame.time.get_ticks()
+
+        if tela_atual == "tela_derrota" and pygame.time.get_ticks() - inicio_animacao >= 2500:
+            esquerda, direita, barco, jogadas, selecionados, estado, mensagem = nova_partida(fase)
+            tela_atual = "menu"
+
+        if tela_atual == "menu":
+            tela.blit(fundo_menu, (0, 0))
+
+            # Controles centralizados sobre a arte da tela inicial.
+            desenhar_texto(tela, "Seu nome:", fonte, BRANCO, 500, 225, True)
+            pygame.draw.rect(tela, BRANCO, (390, 245, 220, 40), border_radius=7)
+            pygame.draw.rect(tela, (0, 0, 0), (390, 245, 220, 40), 3, border_radius=7)
+            desenhar_texto(tela, nome_jogador + "|", fonte, TEXTO, 400, 252)
+            if aviso_nome:
+                desenhar_texto(tela, aviso_nome, pygame.font.Font(None, 22), BRANCO, 500, 600, True)
+            desenhar_botao(tela, "Jogar", (390, 305, 220, 55), fonte, mouse)
+            desenhar_botao(tela, "Como jogar", (390, 375, 220, 55), fonte, mouse)
+            desenhar_botao(tela, "Ranking", (390, 445, 220, 55), fonte, mouse)
+            desenhar_botao(tela, "Sair", (390, 515, 220, 55), fonte, mouse)
+
+        elif tela_atual == "tela_derrota":
+            tela.fill(FUNDO)
+            desenhar_texto(tela, "A CANOA VIROU!", fonte_titulo, VERMELHO,
+                           LARGURA // 2, 280, True)
+            desenhar_texto(tela, "Todos morreram!", fonte_grande, TEXTO,
+                           LARGURA // 2, 355, True)
+            desenhar_texto(tela, "Voltando ao menu principal...", fonte, TEXTO,
+                           LARGURA // 2, 430, True)
+
+        elif tela_atual == "ranking":
+            tela.fill(FUNDO)
+            desenhar_texto(tela, "RANKING DE VITÓRIAS", fonte_titulo, TEXTO, 500, 75, True)
+            desenhar_texto(tela, "Menos travessias = melhor posição", fonte, VERDE, 500, 125, True)
+            desenhar_texto(tela, "Posição", fonte, TEXTO, 175, 185, True)
+            desenhar_texto(tela, "Jogador", fonte, TEXTO, 450, 185, True)
+            desenhar_texto(tela, "Travessias", fonte, TEXTO, 800, 185, True)
+            if not ranking:
+                desenhar_texto(tela, "Nenhuma vitória registrada ainda.", fonte, TEXTO, 500, 300, True)
+            for indice, (nome, quantidade) in enumerate(ranking[:10]):
+                y = 225 + indice * 36
+                desenhar_texto(tela, str(indice + 1) + "º", fonte, TEXTO, 175, y, True)
+                desenhar_texto(tela, nome[:20], fonte, TEXTO, 450, y, True)
+                desenhar_texto(tela, str(quantidade), fonte, TEXTO, 800, y, True)
+            desenhar_botao(tela, "Voltar", (410, 620, 180, 55), fonte, mouse)
+
+        elif tela_atual == "instrucoes":
+            tela.fill(FUNDO)
+            desenhar_texto(tela, "COMO JOGAR", fonte_titulo, TEXTO,
+                           LARGURA // 2, 95, True)
+            desenhar_texto(tela, "1. Leve os seis alunos da Margem A para a B.",
+                           fonte, TEXTO, 110, 200)
+            desenhar_texto(tela, "2. O barco leva uma ou duas pessoas por viagem.",
+                           fonte, TEXTO, 110, 255)
+            desenhar_texto(tela, "3. O barco não pode atravessar vazio.",
+                           fonte, TEXTO, 110, 310)
+            desenhar_texto(tela, "4. Se houver alguém do Insper numa margem,",
+                           fonte, TEXTO, 110, 365)
+            desenhar_texto(tela, "   a FGV não pode ficar em maioria nela.",
+                           fonte, TEXTO, 110, 405)
+            desenhar_texto(tela, "Clique nos alunos para selecioná-los.",
+                           fonte, TEXTO, 110, 465)
+
+            desenhar_botao(tela, "Voltar", (150, 560, 180, 60), fonte, mouse)
+            desenhar_botao(tela, "Começar", (670, 560, 180, 60), fonte, mouse)
+
+        elif tela_atual == "jogo":
+            areas_esquerda, areas_direita = desenhar_jogo(
+                tela, fonte_titulo, fonte, esquerda, direita, barco,
+                selecionados, jogadas, estado, mensagem, mouse, fase,
+                min(1, (pygame.time.get_ticks() - inicio_animacao) / 1100)
+                if estado == "animando" else 1,
+                -180 * min(1, (pygame.time.get_ticks() - inicio_animacao) / 1100)
+                if estado == "virando" else 0
+            )
+
+        pygame.display.flip()
