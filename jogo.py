@@ -245,18 +245,99 @@ def desenhar_alunos(tela, margem, x_inicial, y_inicial, selecionados, fase):
 
     return areas
 
-  
+def desenhar_jogo(tela, fonte_titulo, fonte, esquerda, direita, barco,
+                  selecionados, jogadas, estado, mensagem, mouse, fase, progresso=1, angulo=0):
+    """Desenha o cenário de lado: chão, rio, alunos em pé e barco."""
+    # Céu em degradê para dar profundidade sem depender de outra imagem.
+    topo = (74, 126, 160) if fase == 1 else (92, 101, 135)
+    base = (190, 215, 211) if fase == 1 else (224, 164, 125)
+    for y in range(0, 440):
+        parte = y / 440
+        cor = (
+            int(topo[0] + (base[0] - topo[0]) * parte),
+            int(topo[1] + (base[1] - topo[1]) * parte),
+            int(topo[2] + (base[2] - topo[2]) * parte)
+        )
+        pygame.draw.line(tela, cor, (0, y), (1000, y))
 
+    # Sol discreto e nuvens formadas por círculos irregulares.
+    pygame.draw.circle(tela, (246, 210, 145), (845, 145), 31)
+    for cx, cy, escala in [(135, 150, 1.0), (470, 125, 0.8), (720, 190, 0.65)]:
+        cor_nuvem = (236, 239, 233)
+        pygame.draw.circle(tela, cor_nuvem, (cx, cy), int(25 * escala))
+        pygame.draw.circle(tela, cor_nuvem, (cx + int(27*escala), cy - int(9*escala)), int(31*escala))
+        pygame.draw.circle(tela, cor_nuvem, (cx + int(57*escala), cy), int(23*escala))
+        pygame.draw.ellipse(tela, cor_nuvem, (cx-int(10*escala), cy, int(90*escala), int(30*escala)))
 
+    # Montanhas em camadas, com silhuetas menos geométricas.
+    pygame.draw.polygon(tela, (123, 153, 145),
+        [(0,360),(0,325),(75,285),(135,315),(205,250),(280,315),(350,280),(430,350),(430,440),(0,440)])
+    pygame.draw.polygon(tela, (101, 137, 124),
+        [(570,440),(570,350),(635,305),(700,330),(770,260),(835,315),(900,275),(1000,335),(1000,440)])
+    pygame.draw.polygon(tela, (84, 124, 103),
+        [(0,440),(0,385),(85,370),(150,395),(230,350),(310,390),(390,365),(470,420),(560,385),(650,410),(730,365),(820,405),(910,370),(1000,395),(1000,440)])
 
+    # Rio e margens com contornos irregulares.
+    pygame.draw.rect(tela, (65, 135, 164), (300, 438, 400, 70))
+    pygame.draw.polygon(tela, (132, 103, 72), [(0,430),(300,430),(315,452),(300,505),(0,505)])
+    pygame.draw.polygon(tela, (132, 103, 72), [(700,430),(1000,430),(1000,505),(700,505),(685,455)])
+    pygame.draw.polygon(tela, (79, 132, 86), [(0,425),(70,420),(145,427),(220,417),(300,426),(305,442),(0,442)])
+    pygame.draw.polygon(tela, (79, 132, 86), [(695,442),(700,426),(770,418),(845,427),(920,417),(1000,424),(1000,442)])
 
+    # Pequenos reflexos deixam a água menos chapada.
+    for x, y, largura_onda in [(320,458,45),(390,482,62),(485,462,38),(545,490,70),(625,470,42)]:
+        pygame.draw.arc(tela, (155, 205, 215), (x, y, largura_onda, 12), 0.2, 2.9, 2)
 
+    desenhar_texto(tela, "MARGEM A", fonte, TEXTO, 150, 300, True)
+    desenhar_texto(tela, "MARGEM B", fonte, TEXTO, 845, 300, True)
+    areas_esquerda = desenhar_alunos(tela, esquerda, 8, 342, selecionados, fase)
+    areas_direita = desenhar_alunos(tela, direita, 702, 342, selecionados, fase)
 
+    # Desenha a canoa em uma superfície separada para poder movê-la e virá-la.
+    x_destino = 315 if barco == 0 else 525
+    if estado == "animando":
+        x_origem = 525 if barco == 0 else 315
+        x_barco = x_origem + (x_destino - x_origem) * progresso
+    else:
+        x_barco = x_destino
 
+    canoa = pygame.Surface((160, 125), pygame.SRCALPHA)
+    for indice in range(len(selecionados)):
+        numero = selecionados[indice]
+        desenhar_personagem(canoa, numero, 12 + indice * 45, 5, fase)
 
+    pygame.draw.polygon(canoa, (121, 76, 44),
+                        [(0, 88), (150, 88), (130, 120), (22, 120)])
+    pygame.draw.line(canoa, (228, 177, 109), (0, 88), (150, 88), 5)
+    desenhar_texto(canoa, "LinkedIn Express", pygame.font.Font(None, 19),
+                   BRANCO, 75, 105, True)
 
+    canoa = pygame.transform.rotate(canoa, angulo)
+    area_canoa = canoa.get_rect(center=(int(x_barco) + 80, 405))
+    tela.blit(canoa, area_canoa)
 
+    # Os resultados usam a própria tela do jogo: continuam sendo três telas.
+    pygame.draw.rect(tela, (232, 229, 217), (0, 505, 1000, 195))
+    desenhar_texto(tela, "Travessias: " + str(jogadas), fonte, TEXTO, 500, 525, True)
+    if estado in ("jogando", "animando", "virando"):
+        aviso = "Clique nos alunos para embarcar. Clique no lugar deles para retirar."
+        if mensagem != "":
+            aviso = mensagem
+        desenhar_texto(tela, aviso, pygame.font.Font(None, 25), TEXTO, 500, 565, True)
+        if estado != "jogando":
+            aviso = "A canoa está atravessando..." if estado == "animando" else "A canoa virou!"
+            desenhar_texto(tela, aviso, pygame.font.Font(None, 25), VERMELHO, 500, 585, True)
+        desenhar_botao(tela, "Menu", (35, 600, 145, 55), fonte, mouse)
+        desenhar_botao(tela, "Atravessar", (405, 600, 190, 55), fonte, mouse)
+        desenhar_botao(tela, "Reiniciar", (820, 600, 145, 55), fonte, mouse)
+    else:
+        if estado == "vitoria":
+            titulo = "Vitória!"
+        else:
+            titulo = "A canoa virou! Todos morreram."
+        desenhar_texto(tela, titulo, fonte, TEXTO, 500, 555, True)
+        desenhar_texto(tela, mensagem, pygame.font.Font(None, 24), TEXTO, 500, 582, True)
+        desenhar_botao(tela, "Jogar novamente", (330, 620, 210, 52), fonte, mouse)
+        desenhar_botao(tela, "Menu", (565, 620, 145, 52), fonte, mouse)
 
-
-
-
+    return areas_esquerda, areas_direita
