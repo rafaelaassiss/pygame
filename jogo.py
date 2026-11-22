@@ -555,3 +555,133 @@ def main():
             )
 
         pygame.display.flip()
+        for evento in pygame.event.get():
+          if evento.type == pygame.QUIT:
+            executando = False
+          elif evento.type == pygame.KEYDOWN:
+            if tela_atual == "menu" and evento.key == pygame.K_BACKSPACE:
+              nome_jogador = nome_jogador[:-1]
+            elif tela_atual == "menu" and evento.unicode.isprintable() and len(nome_jogador) < 20:
+              nome_jogador += evento.unicode
+              aviso_nome = ""
+            if evento.key == pygame.K_ESCAPE:
+              executando = False
+          elif evento.type == pygame.MOUSEBUTTONDOWN:
+            if evento.button == 1:
+              posicao = evento.pos
+
+              if tela_atual == "manu":
+                if ponto_dentro(posicao, (390, 305, 220, 55)):
+                  if not nome_jogador.strip():
+                    aviso_nome = "Digite seu nome para começar."
+                    continue
+                  fase = 1
+                  esquerda, direita, barco, jogadas, selecionados, estado, mensagem = (nova_partida(fase))
+                  tela_atual = "jogo"
+                elif ponto_dentro(posicao, (390, 375, 220, 55)):
+                  tela_atual = "instrucoes"
+                elif ponto_dentro(posicao, (390, 445, 220, 55)):
+                  ranking = []
+                  arquivo = Path(__file__).with_name("vitorias_travessia.csv")
+                  try:
+                    with arquivo.open("r", newline = "", enconding = "utf-8-sig") as dados:
+                      for linha in csv.DictReader(dados):
+                        try:
+                          rankingappend((linha["nome"], int(linha["travessias"])))
+                        except (ValueError, KeyError, TypeError):
+                          continue
+                  except (OSError, csv.Error):
+                    pass
+                  ranking.sort(key = lambda resultado: resultado[1])
+                  tela_atual = "ranking"
+                elif ponto_dentro(posicao, (390, 515, 220, 55)):
+                  executando = False
+              
+              elif tela_atual == "ranking":
+                if ponto_dentro(posicao, (410, 620, 180, 55)):
+                  tela_atual = "menu"
+              
+              elif tela_atual == "instrucoes":
+                if ponto_dentro(posicao, (150, 560, 180, 60)):
+                  tela_atual = "menu"
+                elif ponto_dentro(posicao, (670, 560, 180, 60)):
+                  if not nome_jogador.strip():
+                    tela_atual = "menu"
+                    aviso_nome = "Digite seu nome para começar."
+                    continue
+                  fase = 1
+                  esquerda, direita, barco, jogadas, selecionados, estado, mensagem = (nova_partida(fase))
+                  tela_atual = "jogo"
+                  
+              elif tela_atual == "jogo":
+                if estado == "jogando":
+                  if ponto_dentro(posicao, (35, 600, 145, 55)):
+                    tela_atual = "menu"
+                    selecionados = []
+                  elif ponto_dentro(posicao, (820, 600, 145, 55)):
+                    esquerda, direita, barco, jogadas, selecionados, estado, mensagem = (nova_partida(fase))
+                  elif ponto_dentro(posicao, (405, 600, 190, 55)):
+                    if len(selecionados) == 0:
+                      mensagem = "O estagiário não pode remar por vocês. Escolha alguém!"
+                    else:
+                      if barco == 0:
+                        origem = esquerda
+                        destino = direita
+                      else:
+                        origem = direita
+                        destino = esquerda
+                      barco = 1 - barco
+                      jogadas += 1
+                      estado = "animando"
+                      inicio_animacao = pygame.time.get_ticks()
+                      mensagem = ""
+                
+                  else:
+                    if barco == 0:
+                      areas_ativas = areas_esquerda
+                    else:
+                      areas_ativas = areas_direita
+                    for numero, area in areas_ativas:
+                      if ponto_dentro(posicao, area):
+                        mensagem = ""
+                        if numero in selecionados:
+                          selecionados.remove(numero)
+                        elif len(selecionados) < (2 if fase == 1 else 3):
+                          selecionados.append(numero)
+                          fala = random.choice(FALAS)
+                          mensagem = nome_personagem(numero, fase) + ": " + fala
+                        else:
+                          mensagem = ("Barco cheio! Nesta fase não cabe mais ninguém.")
+                
+                elif estado in ("vitoria", "derrota"):
+                  if ponto_dentro(posicao, (330, 620, 210, 52)):
+                    esquerda, direita, barco, jogadas, selecionados, estado, mensagem = (nova_partida(fase))
+                  elif ponto_dentro(posicao, (565, 620, 145, 52)):
+                    tela_atual = "menu"
+        
+        relogio.tick(60)
+    if trilha is not None:
+      trilha.stop()
+    pygame.quit()
+if __name__ == "__main__":
+  main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
