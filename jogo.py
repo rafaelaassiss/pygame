@@ -371,7 +371,7 @@ def main():
     fonte_grande = pygame.font.Font(None, 42)
 
     # Imagem de fundo da tela inicial. O arquivo deve ficar na mesma pasta do jogo.
-    caminho_fundo_menu = Path(__file__).with_name("fundo_menu.jpg")
+    caminho_fundo_menu = Path(__file__).parent / "imagens" / "fundo_menu.png"
     fundo_menu = pygame.image.load(str(caminho_fundo_menu)).convert()
     fundo_menu = pygame.transform.smoothscale(fundo_menu, (LARGURA, ALTURA))
 
@@ -570,7 +570,7 @@ def main():
             if evento.button == 1:
               posicao = evento.pos
 
-              if tela_atual == "manu":
+              if tela_atual == "menu":
                 if ponto_dentro(posicao, (390, 305, 220, 55)):
                   if not nome_jogador.strip():
                     aviso_nome = "Digite seu nome para começar."
@@ -584,10 +584,10 @@ def main():
                   ranking = []
                   arquivo = Path(__file__).with_name("vitorias_travessia.csv")
                   try:
-                    with arquivo.open("r", newline = "", enconding = "utf-8-sig") as dados:
+                    with arquivo.open("r", newline = "", encoding = "utf-8-sig") as dados:
                       for linha in csv.DictReader(dados):
                         try:
-                          rankingappend((linha["nome"], int(linha["travessias"])))
+                          ranking.append((linha["nome"], int(linha["travessias"])))
                         except (ValueError, KeyError, TypeError):
                           continue
                   except (OSError, csv.Error):
