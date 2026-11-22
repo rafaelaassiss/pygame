@@ -5,7 +5,7 @@ Turma C
 
 Nome do jogo: 1, 2, 3, VIROU!
 
-Integrantes do grupo: Ana Luiza, Mariane, Rafaela Assis
+Integrantes do grupo: Ana Luiza Marsilio Alves, Mariane, Rafaela Assis
 
 o projeto está disponível no repositório do GitHub. Após clonar o repositório, basta abrir a pasta do projeto e executar os seguintes comandos no terminal:
 
