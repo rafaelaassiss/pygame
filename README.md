@@ -17,3 +17,5 @@ A pasta imagens já está incluída no repositório, portanto a tela inicial e o
 
 link do jogo funcionando:
 https://youtube.com/shorts/naTNguJFWZQ?feature=share
+
+Durante o desenvolvimento do jogo, utilizamos ferramentas de inteligência artificial como apoio à criação de imagens e à programação, conforme autorizado pelo orientador.
