@@ -9,7 +9,7 @@ Integrantes do grupo: Ana Luiza Alves, Mariane Cristina Carvalho, Rafaela Assis
 
 o projeto está disponível no repositório do GitHub. Após clonar o repositório, basta abrir a pasta do projeto e executar os seguintes comandos no terminal:
 
-pip install pygame-ce
+python -m pip install pygame-ce
 
 python jogo.py
 
